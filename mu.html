@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #121212;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+        }
+        #musicIcon {
+            font-size: 80px;
+            color: #e94560;
+            /* Animation for playing state */
+            animation: bounce 2s infinite ease-in-out;
+            animation-play-state: paused; /* Initially paused */
+        }
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        #statusMessage {
+            margin-top: 20px;
+            font-size: 1.5em;
+            color: #aaa;
+        }
+        /* Hide the actual audio player */
+        audio {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- এই অডিও ট্যাগটি আপনার লোকাল গানটি লোড করবে -->
+    <audio id="backgroundMusic" src="song.mp3" loop></audio>
+
+    <div class="container">
+        <i id="musicIcon" class="fas fa-music"></i>
+        <h2 id="statusMessage">Connecting to server...</h2>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCChxWVg-w1TiertkXlUrfUgcC19y-CPNw",
+            authDomain: "hiiii-72d78.firebaseapp.com",
+            databaseURL: "https://hiiii-72d78-default-rtdb.firebaseio.com",
+            projectId: "hiiii-72d78",
+            storageBucket: "hiiii-72d78.appspot.com",
+            messagingSenderId: "560685164053",
+            appId: "1:560685164053:web:7f672f7503160ec868901c"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const controlRef = database.ref('musicControl');
+        const audioPlayer = document.getElementById('backgroundMusic');
+        const statusMessage = document.getElementById('statusMessage');
+        const musicIcon = document.getElementById('musicIcon');
+
+        // Firebase থেকে স্ট্যাটাস চেক করা
+        controlRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            const status = (data && data.status === 'on') ? 'on' : 'off';
+            
+            if (status === 'on') {
+                // ব্রাউজারের autoplay পলিসির জন্য ব্যবহারকারীর ক্লিক লাগতে পারে
+                audioPlayer.play().then(() => {
+                    statusMessage.textContent = "Music is On";
+                    musicIcon.style.animationPlayState = 'running';
+                }).catch(error => {
+                    console.error("Autoplay was prevented:", error);
+                    statusMessage.textContent = "Click anywhere to play music";
+                    // ব্যবহারকারীকে ক্লিক করতে উৎসাহিত করা
+                    document.body.addEventListener('click', () => audioPlayer.play(), { once: true });
+                });
+            } else {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0; // গানটি প্রথম থেকে শুরু করার জন্য
+                statusMessage.textContent = "Music is Off";
+                musicIcon.style.animationPlayState = 'paused';
+            }
+        });
+    </script>
+</body>
+</html>

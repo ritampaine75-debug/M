@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .panel {
+            width: 90%;
+            max-width: 400px;
+            background: #16213e;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid #0f3460;
+            box-shadow: 0 10px 40px rgba(22, 33, 62, 0.5);
+        }
+        h1 {
+            font-weight: 700;
+            color: #e94560;
+            margin-bottom: 30px;
+        }
+        .control-group {
+            background: #0f3460;
+            padding: 25px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        label {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input { display: none; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #555;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px; width: 26px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #e94560; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        #statusText {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #a0a0a0;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <h1><i class="fas fa-sliders-h"></i> Music Controller</h1>
+        <div class="control-group">
+            <label>Play Music</label>
+            <label class="switch">
+                <input type="checkbox" id="musicToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <p id="statusText">Settings will be saved automatically.</p>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCChxWVg-w1TiertkXlUrfUgcC19y-CPNw",
+            authDomain: "hiiii-72d78.firebaseapp.com",
+            databaseURL: "https://hiiii-72d78-default-rtdb.firebaseio.com",
+            projectId: "hiiii-72d78",
+            storageBucket: "hiiii-72d78.appspot.com",
+            messagingSenderId: "560685164053",
+            appId: "1:560685164053:web:7f672f7503160ec868901c"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        const controlRef = database.ref('musicControl');
+        const toggle = document.getElementById('musicToggle');
+        const statusText = document.getElementById('statusText');
+
+        // Step 1: Firebase থেকে বর্তমান স্ট্যাটাস নিয়ে টগল সেট করা
+        controlRef.on('value', (snapshot) => {
+            if (snapshot.exists() && snapshot.val().status === 'on') {
+                toggle.checked = true;
+            } else {
+                toggle.checked = false;
+            }
+        });
+
+        // Step 2: টগল পরিবর্তন হলে Firebase-এ নতুন স্ট্যাটাস সেভ করা
+        toggle.addEventListener('change', () => {
+            const newStatus = toggle.checked ? 'on' : 'off';
+            statusText.textContent = 'Saving...';
+            controlRef.set({ status: newStatus })
+                .then(() => {
+                    statusText.textContent = 'Settings saved!';
+                    setTimeout(() => statusText.textContent = 'Settings will be saved automatically.', 2000);
+                })
+                .catch(error => {
+                    statusText.textContent = 'Error saving settings.';
+                    console.error(error);
+                });
+        });
+    </script>
+</body>
+</html>
